@@ -1,28 +1,27 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	"strings"
+	"context"
 	"time"
 )
 
-func main() {
-	cmdArr := strings.Fields("ps")
-	clear := func() {
-		cmd := exec.Command("clear")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
+type callBackChan chan struct{}
+
+func checkEvery(ctx context.Context, d time.Duration, cb callBackChan) {
 	for {
-		cmd := exec.Command(cmdArr[0], cmdArr[1:]...)
-		cmd.Stdout = os.Stdout
-		if err := cmd.Run(); err != nil {
-			fmt.Println(os.Stderr, err)
+		select {
+		case <-ctx.Done():
+			// ctx is canceled
+			return
+		case <-time.After(d):
+			// wait for the duration
+			if cb != nil {
+				cb <- struct{}{}
+			}
 		}
-		cmd.Stdout = os.Stdout
-		time.Sleep(3 * time.Second)
-		clear()
 	}
+}
+
+func main() {
+
 }
